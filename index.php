@@ -10,18 +10,33 @@ $db_pass ="";
 $db_name ="rcatest";
 /****************/
 
-$newImport = new backup_restore($db_host,$db_name,$db_user,$db_pass);
-
 if(isset($_REQUEST['backup'])){
+    $newImport = new backup_restore($db_host,$db_name,$db_user,$db_pass);
+    
+    $fileName = $db_name . "_" . date("Y-m-d_H-i-s") . ".sql";    
+    // Header description Taken from http://stackoverflow.com/a/10766725
+    header("Content-disposition: attachment; filename=".$fileName);
+    header("Content-Type: application/force-download");
+    //header("Content-Transfer-Encoding: application/zip;\n");
+    header("Pragma: no-cache");
+    header("Cache-Control: must-revalidate, post-check=0, pre-check=0, public");
+    header("Expires: 0");
+
     //call of backup function
-    $message=$newImport -> backup ();
-    echo "Download THE <a href='".$message."' >SQL FILE </a> OR RESTORE IT ANY TIME";
+    echo $newImport -> backup(); die();
+    
 }
 
 if(isset($_REQUEST['restore'])){
-    //call of restore function
-    $message=$newImport -> restore ();
-    echo $message;
+    $newImport = new backup_restore($db_host,$db_name,$db_user,$db_pass);
+    $filetype = $_FILES['rfile']['type'];
+    $filename = $_FILES['rfile']['tmp_name'];
+    $error = ($_FILES['rfile']['tmp_name'] == 0)? false:true ;
+    if ($filetype == "application/octetstream" && !$error) {
+        //call of restore function
+        $message = $newImport -> restore ($filename);
+        echo $message;
+    }
 }
 
 ?>
@@ -32,8 +47,11 @@ if(isset($_REQUEST['restore'])){
     <title>Buffer Now (Back up And Restore Script)</title>
 </head>
 <body>
-    <form method='post'>
-        <input type="submit"  name="backup" value="I will make Backup">
-        <input type="submit" name="restore" value="I Will Restore">
+    <form name="import" action="" method="POST" enctype="multipart/form-data">
+        <label>File to Restore from: </label><input type="file" name="rfile" />
+        <p>
+            <input type="submit"  name="backup" value="Backup">
+            <input type="submit" name="restore" value="Restore">
+        </p>
     </form>
 </body>

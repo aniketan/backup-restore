@@ -214,7 +214,7 @@ class backup_restore {
 	    // Begin new backup of MySql
 	    $tables = mysql_query( 'SHOW TABLES' );
 
-	    $sql_file  = "# WordPress : buffernow.com MySQL database backup\n";
+	    $sql_file  = "# MySQL database backup\n";
 	    $sql_file .= "#\n";
 	    $sql_file .= "# Generated: " . date( 'l j. F Y H:i T' ) . "\n";
 	    $sql_file .= "# Hostname: " . $this->host . "\n";
@@ -233,19 +233,24 @@ class backup_restore {
 	    	$this->make_sql( $sql_file, $curr_table );
 
 	    }
-	return $this->database_dump_filename;
+	 
+	 // Read the backup file into string then remove the file
+	 $finalbackup = file_get_contents($this->database_dump_filename);
+	 unlink($this->database_dump_filename);
+	return $finalbackup;
 
 	}
 	
+
 	//Restore
- 	public function restore() {
+ 	public function restore($file = NULL) {
 		
 			$this->Connect();
- 	
-			if (file_exists($this->get_database_dump_filepath()))
- 			$lines = file($this->get_database_dump_filepath(), FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+		    $file = (empty($file))? $this->get_database_dump_filepath():$file;
+			if (file_exists($file))
+ 			$lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 			else {
-			return "File is missing ,Please make backup";
+			return "File is missing ,Please upload a backup using this form or to " . $this->get_database_dump_filename();
 			exit;
 			}
 			
